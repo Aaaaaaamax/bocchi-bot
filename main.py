@@ -3,7 +3,28 @@ from discord.ext import commands, tasks
 import pytz
 from datetime import datetime
 import os
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 
+# --- 1. ระบบเว็บเซิร์ฟเวอร์จำลองสำหรับ Render (เพิ่มเข้ามาใหม่ตรงนี้) ---
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bocchi Bot is running 24/7!")
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
+    server.serve_forever()
+
+# รันเว็บเซิร์ฟเวอร์แยกออกไปอีก Thread พร้อมกับบอท
+web_thread = threading.Thread(target=run_web_server)
+web_thread.daemon = True
+web_thread.start()
+# -------------------------------------------------------------
+
+# --- 2. โค้ดบอทเดิมของคุณ ---
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
@@ -103,3 +124,4 @@ async def scheduled_task():
 
 # ดึง Token จาก Environment Variable เพื่อความปลอดภัย ป้องกัน GitHub บล็อก
 bot.run(os.getenv('DISCORD_TOKEN'))
+
